@@ -58,12 +58,12 @@ public final class EchoServer {
         // 创建 EchoServerHandler 对象 -> "EchoServerHandler extends ChannelInboundHandlerAdapter"
         final EchoServerHandler serverHandler = new EchoServerHandler();
         try {
-            // 创建 ServerBootstrap 对象, 用于设置服务端的启动配置
+            // 0.创建 ServerBootstrap 对象, 用于设置服务端的启动配置
             ServerBootstrap b = new ServerBootstrap();
             // 1.设置使用的 EventLoopGroup
-            // 2.设置要被实例化的为 NioServerSocketChannel 类
+            // 2.设置要被实例化的Channel类，此处为 NioServerSocketChannel 类
             // 3.设置 NioServerSocketChannel 的可选项
-            // 4. .handler设置 NioServerSocketChannel 的处理器
+            // 4.handler设置 NioServerSocketChannel 的处理器
             b.group(bossGroup, workerGroup)
              .channel(NioServerSocketChannel.class)
              .option(ChannelOption.SO_BACKLOG, 100)
