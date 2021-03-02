@@ -50,7 +50,14 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
 
+    /**
+     * Netty NIO Channel 对象，持有的 Java 原生 NIO 的 Channel 对象
+     */
     private final SelectableChannel ch;
+
+    /**
+     * 感兴趣的读事件的操作位值
+     */
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
     boolean readPending;
@@ -77,6 +84,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        // 调用父 AbstractChannel 的构造方法
         super(parent);
         this.ch = ch;
         this.readInterestOp = readInterestOp;
@@ -377,6 +385,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                // <1> 调用 #javaChannel() 方法，获得 Java 原生 NIO 的 Channel 对象
+                // <2> 调用 #unwrappedSelector() 方法，返回 Java 原生 NIO Selector 对象, 每个 NioEventLoop 对象上，都独有一个 Selector 对象
+                // <3> 【重要】调用 SelectableChannel#register(Selector sel, int ops, Object att) 方法，注册 Java 原生 NIO 的 Channel 对象到 Selector 对象上
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

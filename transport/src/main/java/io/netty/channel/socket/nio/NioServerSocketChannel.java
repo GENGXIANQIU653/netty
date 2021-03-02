@@ -61,6 +61,8 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              *  {@link SelectorProvider#provider()} which is called by each ServerSocketChannel.open() otherwise.
              *
              *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
+             *
+             *  此处 和 ServerSocketChannel#open() 方法创建 ServerSocketChannel 对象是一致
              */
             return provider.openServerSocketChannel();
         } catch (IOException e) {
@@ -81,6 +83,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      */
     public NioServerSocketChannel() {
         // 创建 NIO 的 ServerSocketChannel 对象
+        // 调用下面 public NioServerSocketChannel(ServerSocketChannel channel) 构造方法
         this(newSocket(DEFAULT_SELECTOR_PROVIDER));
     }
 
@@ -89,6 +92,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      */
     public NioServerSocketChannel(SelectorProvider provider) {
         // 创建 NIO 的 ServerSocketChannel 对象
+        // 调用下面 public NioServerSocketChannel(ServerSocketChannel channel) 构造方法
         this(newSocket(provider));
     }
 
@@ -96,8 +100,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
-        // 调用父 AbstractNioMessageChannel 的构造方法。详细解析，见 「3.14.1.2 AbstractNioMessageChannel」 。
-        // 注意传入的 SelectionKey 的值为 OP_ACCEPT
+        // 调用父 AbstractNioMessageChannel 的构造方法。详细解析，见 「3.14.1.2 AbstractNioMessageChannel」，注意传入的 SelectionKey 的值为 OP_ACCEPT
         super(null, channel, SelectionKey.OP_ACCEPT);
         // 初始化 config 属性，创建 NioServerSocketChannelConfig 对象
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
@@ -144,6 +147,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {
         if (PlatformDependent.javaVersion() >= 7) {
+            // 【重要】到了此处，服务端的 Java 原生 NIO ServerSocketChannel 终于绑定端口
             javaChannel().bind(localAddress, config.getBacklog());
         } else {
             javaChannel().socket().bind(localAddress, config.getBacklog());

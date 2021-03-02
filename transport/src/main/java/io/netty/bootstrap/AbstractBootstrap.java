@@ -303,9 +303,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // =================================================================================
         // <1> 初始化并注册一个 Channel 对象，因为注册是异步的过程，所以返回一个 ChannelFuture 对象
+        // =================================================================================
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
+
         // 若发生异常，直接进行返回
         if (regFuture.cause() != null) {
             return regFuture;
@@ -315,11 +318,13 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
-            // ==================
+
+            // ===================================================
             // <2> 核心：绑定
             // 绑定 Channel 的端口，并注册 Channel 到 SelectionKey 中
-            // ==================
+            // ===================================================
             doBind0(regFuture, channel, localAddress, promise);
+
             return promise;
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
@@ -356,8 +361,17 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         Channel channel = null;
         try {
             // <1.1> 创建 Channel 对象
+            /**
+             * 对于一个 Netty NIO Channel 对象，它会包含如下几个核心组件：
+             * ChannelId
+             * Unsafe
+             * Pipeline
+             * ChannelHandler
+             * ChannelConfig
+             * Java 原生 NIO Channel
+             */
             channel = channelFactory.newChannel();
-            // <1.2> 初始化 Channel 配置
+            // <1.2> 初始化 Channel 配置，这是个抽象方法，由子类 ServerBootstrap 或 Bootstrap 实现
             init(channel);
         } catch (Throwable t) {
             // 已创建 Channel 对象
@@ -409,9 +423,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
+                // 注册成功，绑定端口
                 if (regFuture.isSuccess()) {
                     channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
+                    // 注册失败，回调通知 promise 异常
                     promise.setFailure(regFuture.cause());
                 }
             }
