@@ -298,7 +298,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Create a new {@link Channel} and bind it.
      */
     public ChannelFuture bind(SocketAddress localAddress) {
+        // 校验服务启动需要的必要参数
         validate();
+        // 绑定本地地址( 包括端口 )
         return doBind(ObjectUtil.checkNotNull(localAddress, "localAddress"));
     }
 

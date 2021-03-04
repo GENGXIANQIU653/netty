@@ -28,9 +28,14 @@ import java.util.Map;
 
 /**
  * Exposes the configuration of an {@link AbstractBootstrap}.
+ *
+ * BootstrapConfig 抽象类
  */
 public abstract class AbstractBootstrapConfig<B extends AbstractBootstrap<B, C>, C extends Channel> {
 
+    /**
+     * bootstrap 属性，对应的启动类对象
+     */
     protected final B bootstrap;
 
     protected AbstractBootstrapConfig(B bootstrap) {
