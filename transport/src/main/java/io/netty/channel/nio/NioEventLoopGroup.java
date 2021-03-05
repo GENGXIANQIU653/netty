@@ -76,41 +76,63 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      * Create a new instance using the specified number of threads, the given {@link ThreadFactory} and the given
      * {@link SelectorProvider}.
      */
-    public NioEventLoopGroup(
-            int nThreads, ThreadFactory threadFactory, final SelectorProvider selectorProvider) {
+    public NioEventLoopGroup(int nThreads, ThreadFactory threadFactory, final SelectorProvider selectorProvider) {
         this(nThreads, threadFactory, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
     }
 
-    public NioEventLoopGroup(int nThreads, ThreadFactory threadFactory,
-        final SelectorProvider selectorProvider, final SelectStrategyFactory selectStrategyFactory) {
+    public NioEventLoopGroup(int nThreads,
+                             ThreadFactory threadFactory,
+                             final SelectorProvider selectorProvider,
+                             final SelectStrategyFactory selectStrategyFactory) {
         super(nThreads, threadFactory, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
     }
 
-    public NioEventLoopGroup(
-            int nThreads, Executor executor, final SelectorProvider selectorProvider) {
+    public NioEventLoopGroup(int nThreads,
+                             Executor executor,
+                             final SelectorProvider selectorProvider) {
         this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
     }
 
-    public NioEventLoopGroup(int nThreads, Executor executor, final SelectorProvider selectorProvider,
+    public NioEventLoopGroup(int nThreads,
+                             Executor executor,
+                             final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory) {
         super(nThreads, executor, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
     }
 
-    public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
+    public NioEventLoopGroup(int nThreads,
+                             Executor executor,
+                             EventExecutorChooserFactory chooserFactory,
                              final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory) {
         super(nThreads, executor, chooserFactory, selectorProvider, selectStrategyFactory,
                 RejectedExecutionHandlers.reject());
     }
 
-    public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
+    public NioEventLoopGroup(int nThreads,
+                             Executor executor,
+                             EventExecutorChooserFactory chooserFactory,
                              final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory,
                              final RejectedExecutionHandler rejectedExecutionHandler) {
         super(nThreads, executor, chooserFactory, selectorProvider, selectStrategyFactory, rejectedExecutionHandler);
     }
 
-    public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
+    /**
+     * 第一个参数，selectorProvider ，java.nio.channels.spi.SelectorProvider ，用于创建 Java NIO Selector 对象。
+     * 第二个参数，selectStrategyFactory ，io.netty.channel.SelectStrategyFactory ，选择策略工厂
+     * 第三个参数，rejectedExecutionHandler ，io.netty.channel.SelectStrategyFactory ，拒绝执行处理器
+     * @param nThreads
+     * @param executor
+     * @param chooserFactory
+     * @param selectorProvider
+     * @param selectStrategyFactory
+     * @param rejectedExecutionHandler
+     * @param taskQueueFactory
+     */
+    public NioEventLoopGroup(int nThreads,
+                             Executor executor,
+                             EventExecutorChooserFactory chooserFactory,
                              final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory,
                              final RejectedExecutionHandler rejectedExecutionHandler,
@@ -132,6 +154,8 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     /**
      * Replaces the current {@link Selector}s of the child event loops with newly created {@link Selector}s to work
      * around the  infamous epoll 100% CPU bug.
+     *
+     * 重建所有 EventLoop 的 Selector 对象
      */
     public void rebuildSelectors() {
         for (EventExecutor e: this) {
@@ -139,6 +163,13 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         }
     }
 
+    /**
+     * 创建 NioEventLoop 对象
+     * @param executor
+     * @param args
+     * @return
+     * @throws Exception
+     */
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
         EventLoopTaskQueueFactory queueFactory = args.length == 4 ? (EventLoopTaskQueueFactory) args[3] : null;

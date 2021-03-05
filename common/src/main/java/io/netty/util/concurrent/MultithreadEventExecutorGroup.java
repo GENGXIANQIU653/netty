@@ -27,13 +27,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
+ *
+ * 继承 AbstractEventExecutorGroup 抽象类，
+ * 基于多线程的 EventExecutor ( 事件执行器 )的分组抽象类
+ *
+ * 【抽象类】
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
+    /**
+     * EventExecutor 数组
+     */
     private final EventExecutor[] children;
+
+    /**
+     * 不可变( 只读 )的 EventExecutor 数组
+     *
+     * @see #MultithreadEventExecutorGroup(int, Executor, EventExecutorChooserFactory, Object...)
+     */
     private final Set<EventExecutor> readonlyChildren;
+
+    /**
+     * 已终止的 EventExecutor 数量
+     */
     private final AtomicInteger terminatedChildren = new AtomicInteger();
+
+    /**
+     * 用于终止 EventExecutor 的异步 Future
+     */
     private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
+
+    /**
+     * EventExecutor 选择器
+     */
     private final EventExecutorChooserFactory.EventExecutorChooser chooser;
 
     /**
@@ -66,32 +92,50 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
-                                            EventExecutorChooserFactory chooserFactory, Object... args) {
+    protected MultithreadEventExecutorGroup(int nThreads,
+                                            Executor executor,
+                                            EventExecutorChooserFactory chooserFactory,
+                                            Object... args) {
         if (nThreads <= 0) {
             throw new IllegalArgumentException(String.format("nThreads: %d (expected: > 0)", nThreads));
         }
 
+        // 创建执行器
         if (executor == null) {
+
+            /**
+             * ThreadPerTaskExecutor
+             * 每个任务一个线程的执行器实现类
+             */
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
+        // 创建 EventExecutor 数组
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
+            // 是否创建成功
             boolean success = false;
             try {
+                // 创建 EventExecutor 对象
                 children[i] = newChild(executor, args);
+                // 标记创建成功
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
+                // 创建失败，抛出 IllegalStateException 异常
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
+
+                // 创建失败，关闭所有已创建的 EventExecutor
                 if (!success) {
+
+                    // 关闭所有已创建的 EventExecutor
                     for (int j = 0; j < i; j ++) {
                         children[j].shutdownGracefully();
                     }
 
+                    // 确保所有已创建的 EventExecutor 已关闭
                     for (int j = 0; j < i; j ++) {
                         EventExecutor e = children[j];
                         try {
@@ -108,35 +152,60 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         }
 
+        /**
+         * 创建 EventExecutor 选择器
+         *
+         * EventExecutorChooserFactory
+         */
         chooser = chooserFactory.newChooser(children);
 
+        // 创建监听器，用于 EventExecutor 终止时的监听
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
+                // 全部关闭
                 if (terminatedChildren.incrementAndGet() == children.length) {
+                    // 设置结果，并通知监听器们
                     terminationFuture.setSuccess(null);
                 }
             }
         };
 
+        // 设置监听器到每个 EventExecutor 上
         for (EventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }
 
+        // 创建不可变( 只读 )的 EventExecutor 数组
         Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
     }
 
+    /**
+     * 创建线程工厂对象
+     * @return
+     */
     protected ThreadFactory newDefaultThreadFactory() {
+        // 创建的对象为 DefaultThreadFactory ，并且使用类名作为 poolType
         return new DefaultThreadFactory(getClass());
     }
 
+    /**
+     * 选择下一个 EventExecutor 对象
+     * @return
+     */
     @Override
     public EventExecutor next() {
         return chooser.next();
     }
 
+    /**
+     * 获得 EventExecutor 数组的迭代器
+     * 为了避免调用方，获得迭代器后，对 EventExecutor 数组进行修改，
+     * 所以返回是不可变的 EventExecutor 数组 readonlyChildren 的迭代器
+     * @return
+     */
     @Override
     public Iterator<EventExecutor> iterator() {
         return readonlyChildren.iterator();
@@ -145,6 +214,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     /**
      * Return the number of {@link EventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
+     *
+     * 获得 EventExecutor 数组的大小
      */
     public final int executorCount() {
         return children.length;
@@ -154,6 +225,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * Create a new EventExecutor which will later then accessible via the {@link #next()}  method. This method will be
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
+     * 抽象方法，创建 EventExecutor 对象
+     * 子类实现该方法，创建其对应的 EventExecutor 实现类的对象
      */
     protected abstract EventExecutor newChild(Executor executor, Object... args) throws Exception;
 

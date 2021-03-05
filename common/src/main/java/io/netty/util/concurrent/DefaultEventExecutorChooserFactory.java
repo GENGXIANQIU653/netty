@@ -21,10 +21,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Default implementation which uses simple round-robin to choose next {@link EventExecutor}.
+ *
+ * 实现 EventExecutorChooserFactory 接口，默认 EventExecutorChooser 工厂实现类
+ *
  */
 @UnstableApi
 public final class DefaultEventExecutorChooserFactory implements EventExecutorChooserFactory {
 
+    /**
+     * 单例
+     */
     public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
     private DefaultEventExecutorChooserFactory() { }
@@ -32,9 +38,12 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @SuppressWarnings("unchecked")
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        // 是否为 2 的幂次方
         if (isPowerOfTwo(executors.length)) {
+            // 创建 PowerOfTwoEventExecutorChooser 对象
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
+            // 创建 GenericEventExecutorChooser 对象
             return new GenericEventExecutorChooser(executors);
         }
     }
@@ -43,8 +52,17 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         return (val & -val) == val;
     }
 
+    /**
+     * 内部类
+     */
     private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
+        /**
+         * 自增序列
+         */
         private final AtomicInteger idx = new AtomicInteger();
+        /**
+         * EventExecutor 数组
+         */
         private final EventExecutor[] executors;
 
         PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {
@@ -57,6 +75,9 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         }
     }
 
+    /**
+     * 内部类
+     */
     private static final class GenericEventExecutorChooser implements EventExecutorChooser {
         private final AtomicInteger idx = new AtomicInteger();
         private final EventExecutor[] executors;
