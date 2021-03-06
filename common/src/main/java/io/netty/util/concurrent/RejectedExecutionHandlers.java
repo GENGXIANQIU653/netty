@@ -23,8 +23,19 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * Expose helper methods which create different {@link RejectedExecutionHandler}s.
+ *
+ * RejectedExecutionHandler 实现类枚举
  */
 public final class RejectedExecutionHandlers {
+
+    private RejectedExecutionHandlers() { }
+
+    /**
+     * 第一种
+     *
+     * 通过 #reject() 方法，返回 REJECT 实现类的对象。该实现在拒绝时，直接抛出 RejectedExecutionException 异常。
+     * 默认情况下，使用这种实现
+     */
     private static final RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
         @Override
         public void rejected(Runnable task, SingleThreadEventExecutor executor) {
@@ -32,10 +43,10 @@ public final class RejectedExecutionHandlers {
         }
     };
 
-    private RejectedExecutionHandlers() { }
-
     /**
      * Returns a {@link RejectedExecutionHandler} that will always just throw a {@link RejectedExecutionException}.
+     *
+     * 返回 REJECT 实现类的对象
      */
     public static RejectedExecutionHandler reject() {
         return REJECT;
@@ -45,6 +56,8 @@ public final class RejectedExecutionHandlers {
      * Tries to backoff when the task can not be added due restrictions for an configured amount of time. This
      * is only done if the task was added from outside of the event loop which means
      * {@link EventExecutor#inEventLoop()} returns {@code false}.
+     *
+     * 第二种
      */
     public static RejectedExecutionHandler backoff(final int retries, long backoffAmount, TimeUnit unit) {
         ObjectUtil.checkPositive(retries, "retries");

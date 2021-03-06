@@ -23,6 +23,8 @@ import io.netty.util.concurrent.OrderedEventExecutor;
  * One {@link EventLoop} instance will usually handle more than one {@link Channel} but this may depend on
  * implementation details and internals.
  *
+ * 继承 OrderedEventExecutor 和 EventLoopGroup 接口，EventLoop 接口
+ *
  */
 public interface EventLoop extends OrderedEventExecutor, EventLoopGroup {
     @Override

@@ -28,8 +28,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.
+ *
+ * 继承 AbstractEventExecutor 抽象类，支持定时任务的 EventExecutor 的抽象类
+ * 详细解析，见 《精尽 Netty 源码解析 —— EventLoop（七）之 EventLoop 处理定时任务》
  */
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
+
+
     private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
             new Comparator<ScheduledFutureTask<?>>() {
                 @Override
@@ -38,6 +43,10 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
                 }
             };
 
+    /**
+     * 空的Runnable 实现类
+     * 仅仅用于唤醒基于 taskQueue 阻塞拉取的 EventLoop 实现类
+     */
    static final Runnable WAKEUP_TASK = new Runnable() {
        @Override
        public void run() { } // Do nothing
