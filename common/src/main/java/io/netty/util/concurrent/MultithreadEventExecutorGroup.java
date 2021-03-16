@@ -117,7 +117,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             // 是否创建成功
             boolean success = false;
             try {
-                // 创建 EventExecutor 对象
+                // 创建 EventExecutor 对象，newChild() 在子类NioEventLoopGroup中实现
                 children[i] = newChild(executor, args);
                 // 标记创建成功
                 success = true;
